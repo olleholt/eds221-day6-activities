@@ -1,0 +1,115 @@
+---
+title: "lobster_exploration"
+format: html
+editor: visual
+---
+
+```{r}
+library(tidyverse)
+library(here)
+library(janitor)
+library(lterdatasampler)
+```
+
+## Day 6 Activities
+
+### **Find counts and mean sizes by site & year**
+
+```{r}
+lob_abundance_all_years <- read_csv(here("data","Lobster_Abundance_All_Years_20210412.csv"), na = c("-99999", "")) %>% clean_names() %>% uncount(count)
+```
+
+```{r}
+# Reminder: group_by + summarize
+counts_mean_by_site_year <- lob_abundance_all_years %>% 
+  group_by(site,year) %>% 
+  summarize(mean_size = mean(size_mm), n = n())
+```
+
+```{r}
+ggplot(data = counts_mean_by_site_year, aes(x = year, y = n))+
+  geom_point(aes(color = site))
+```
+
+### **Find the proportion of legal lobsters at each site for 2020**
+
+```{r}
+subset_2020 <- lob_abundance_all_years %>% 
+  filter(year %in% 2020) %>% group_by(site) %>% 
+  mutate(legal_limit = case_when(size_mm >= 79.76 ~ "Above", size_mm < 79.76 ~ "Below"))
+
+
+limit_subset <- subset_2020 %>% 
+  group_by(site,legal_limit) %>% 
+  summarize(n=n())
+
+
+
+ggplot(data = limit_subset, aes(x = site, y = n, fill = legal_limit))+
+  geom_col(position = "fill")
+```
+
+### **filter() practice**
+
+1.  Create and store a subset that only contains lobsters from sites \"IVEE\", \"CARP\" and \"NAPL\". Check your output data frame to ensure that only those three sites exist.
+
+2.  Create a subset that only contains lobsters observed in August.
+
+3.  Create a subset with lobsters at Arroyo Quemado (AQUE) **OR** with a carapace length greater than 70 mm.
+
+4.  Create a subset that does NOT include observations from Naples Reef (NAPL)
+
+```{r}
+subset_by_site <- lob_abundance_all_years %>% 
+  filter(site %in% c("IVEE", "CARP", "NAPL"))
+
+subset_by_site_August <- lob_abundance_all_years %>% 
+  filter(month %in% 8)
+
+subset_AQUE_or <- lob_abundance_all_years %>% 
+  filter(site %in% "AQUE" | size_mm > 70)
+
+exclude_NAPL <- lob_abundance_all_years %>% 
+  filter(site != "NAPL")
+```
+
+### **group_by() %\>% summarize() practice**
+
+5.  Find the mean and standard deviation of lobster carapace length, grouped by site.
+
+6.  Find the maximum carapace length by site and month.
+
+```{r}
+lob_mean_sd_by_site <- lob_abundance_all_years %>% group_by(site) %>% summarize(mean_size = mean(size_mm, na.rm = TRUE), sd_size = sd(size_mm, na.rm = TRUE))
+
+lob_max_length_by_site_month <- lob_abundance_all_years %>% group_by(site,month) %>% summarize(max_size = max(size_mm, na.rm = TRUE))
+```
+
+### **mutate() practice**
+
+7.  Add a new column that contains lobster carapace length converted to centimeters. Check output.
+
+8.  Update the site column to all lowercase. Check output.
+
+9.  Convert the area column to a character (not sure why you\'d want to do this, but try it anyway). Check output.
+
+```{r}
+lobs_cm<-lob_abundance_all_years %>% 
+  mutate(length_cm = size_mm / 10)
+
+site_lowercase <- lob_abundance_all_years %>% 
+  mutate(site = tolower(site))
+
+area_character <- lob_abundance_all_years %>% 
+  mutate(area_chr = as.character(area))
+```
+
+### **case_when() practice**
+
+10. Use `case_when()` to add a new column called `size_bin` that contains \"small\" if carapace size is \<= 70 mm, or \"large\" if it is greater than 70 mm. Check output.
+
+11. Use `case_when()` to add a new column called `designation` that contains \"MPA\" if the site is \"IVEE\" or \"NAPL\", and \"not MPA\" for all other outcomes.
+
+```{r}
+
+```
